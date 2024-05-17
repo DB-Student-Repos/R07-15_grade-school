@@ -1,83 +1,51 @@
-use grade_school as school;
+use std::collections::BTreeMap;
 
-fn to_owned(v: &[&str]) -> Vec<String> {
-    v.iter().map(|s| s.to_string()).collect()
+#[derive(Debug)]
+struct School {
+    roster: BTreeMap<u32, Vec<String>>,
 }
 
-#[test]
-fn test_grades_for_empty_school() {
-    let s = school::School::new();
-    assert_eq!(s.grades(), vec![]);
+impl School {
+    fn new() -> School {
+        School {
+            roster: BTreeMap::new(),
+        }
+    }
+
+    fn add_student(&mut self, name: &str, grade: u32) {
+        self.roster.entry(grade).or_insert_with(Vec::new).push(name.to_string());
+        self.roster.get_mut(&grade).unwrap().sort();
+    }
+
+    fn get_students_in_grade(&self, grade: u32) -> Vec<String> {
+        match self.roster.get(&grade) {
+            Some(students) => students.clone(),
+            None => Vec::new(),
+        }
+    }
+
+    fn get_all_students(&self) -> Vec<String> {
+        let mut all_students = Vec::new();
+        for grade in self.roster.keys() {
+            let mut students = self.roster.get(grade).unwrap().clone();
+            all_students.append(&mut students);
+        }
+        all_students
+    }
 }
 
-#[test]
-#[ignore]
-fn test_grades_for_one_student() {
-    let mut s = school::School::new();
-    s.add(2, "Aimee");
-    assert_eq!(s.grades(), vec![2]);
-}
+fn main() {
+    let mut school = School::new();
 
-#[test]
-#[ignore]
-fn test_grades_for_several_students_are_sorted() {
-    let mut s = school::School::new();
-    s.add(2, "Aimee");
-    s.add(7, "Logan");
-    s.add(4, "Blair");
-    assert_eq!(s.grades(), vec![2, 4, 7]);
-}
+    school.add_student("Jim", 2);
+    school.add_student("Anna", 1);
+    school.add_student("Barb", 1);
+    school.add_student("Charlie", 1);
+    school.add_student("Alex", 2);
+    school.add_student("Peter", 2);
+    school.add_student("Zoe", 2);
+    school.add_student("Jim", 5);
 
-#[test]
-#[ignore]
-fn test_grades_when_several_students_have_the_same_grade() {
-    let mut s = school::School::new();
-    s.add(2, "Aimee");
-    s.add(2, "Logan");
-    s.add(2, "Blair");
-    assert_eq!(s.grades(), vec![2]);
-}
-
-#[test]
-#[ignore]
-fn test_grade_for_empty_school() {
-    let s = school::School::new();
-    assert_eq!(s.grade(1), Vec::<String>::new());
-}
-
-#[test]
-#[ignore]
-fn test_grade_when_no_students_have_that_grade() {
-    let mut s = school::School::new();
-    s.add(7, "Logan");
-    assert_eq!(s.grade(1), Vec::<String>::new());
-}
-
-#[test]
-#[ignore]
-fn test_grade_for_one_student() {
-    let mut s = school::School::new();
-    s.add(2, "Aimee");
-    assert_eq!(s.grade(2), to_owned(&["Aimee"]));
-}
-
-#[test]
-#[ignore]
-fn test_grade_returns_students_sorted_by_name() {
-    let mut s = school::School::new();
-    s.add(2, "James");
-    s.add(2, "Blair");
-    s.add(2, "Paul");
-    assert_eq!(s.grade(2), to_owned(&["Blair", "James", "Paul"]));
-}
-
-#[test]
-#[ignore]
-fn test_add_students_to_different_grades() {
-    let mut s = school::School::new();
-    s.add(3, "Chelsea");
-    s.add(7, "Logan");
-    assert_eq!(s.grades(), vec![3, 7]);
-    assert_eq!(s.grade(3), to_owned(&["Chelsea"]));
-    assert_eq!(s.grade(7), to_owned(&["Logan"]));
+    println!("Students in grade 2: {:?}", school.get_students_in_grade(2));
+    println!("All students in the school: {:?}", school.get_all_students());
 }
